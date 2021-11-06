@@ -30,7 +30,7 @@ int main (int argc, char *argv[]) {
         }
     }
     
-
+    dimension = graph_size(input_file_name);
     int (*graph)[dimension] = read_graph(input_file_name);
 
     printf("floyd start\n");
