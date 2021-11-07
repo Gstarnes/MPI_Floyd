@@ -32,7 +32,7 @@ int main (int argc, char *argv[]) {
     input_file_name = "default-graph.dat";
     output_file_name = "default-floyds-graph.dat";
 
-    debug( "start\n" )
+    debug("%d: start\n", rank);
 
     mpi_op_status = MPI_Init( &argc, &argv);
     mpi_err(mpi_op_status, "MPI_INIT");
