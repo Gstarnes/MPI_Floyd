@@ -28,13 +28,16 @@ int main (int argc, char *argv[]) {
     MPI_Comm row_comm;
     MPI_Comm col_comm;
 
+
     input_file_name = "default-graph.dat";
     output_file_name = "default-floyds-graph.dat";
 
-   // debug( "start\n" )
+    debug( "start\n" )
 
     mpi_op_status = MPI_Init( &argc, &argv);
     mpi_err(mpi_op_status, "MPI_INIT");
+
+    float start_total = MPI_Wtime(); 
 
     while((opt = getopt(argc, argv, "i:o:")) != -1)
     {
@@ -95,6 +98,8 @@ int main (int argc, char *argv[]) {
 
     debug("%d: floyd start\n", rank);
 
+    float start_floyd = MPI_Wtime();
+
     for(int old_row = 0; old_row < dimension; old_row++)
     {
         int owning_task[2];
@@ -140,10 +145,18 @@ int main (int argc, char *argv[]) {
         debug("%d: floyd iteration finished\n", rank);
     }
 
+    float stop_floyd = MPI_Wtime();
+
 
     debug("%d: write checkboard graph\n", rank);
 
     write_checkerboard_graph (output_file_name, (void***) &graph, (void**) &graph_elements, MPI_INT, dimension, cartesian);
+
+    float stop_total = MPI_Wtime(); 
+
+    printf("%f elapsed total program time", stop_floyd - start_floyd);    
+
+    printf("%f elapsed total program time", stop_total - start_total);
 
     MPI_Finalize();
 
