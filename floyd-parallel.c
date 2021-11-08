@@ -8,8 +8,6 @@
 #include <mpi.h>
 
 int main (int argc, char *argv[]) {
-        
-    clock_t time_start = clock();
 
     int opt, dimension, temp_path, mpi_op_status;
     int rank, size;
@@ -22,7 +20,6 @@ int main (int argc, char *argv[]) {
     const int dims[2];
     char* input_file_name;
     char* output_file_name;
-    MPI_Status status;
     MPI_Comm cartesian;
     MPI_Comm row_comm;
     MPI_Comm col_comm;
@@ -46,6 +43,9 @@ int main (int argc, char *argv[]) {
             case 'o':output_file_name = strdup(optarg);
             break;
 
+            default: printf("incorrect or unknown argument exiting");
+            exit(EXIT_FAILURE);
+            break;
         }
     }
 
@@ -59,20 +59,20 @@ int main (int argc, char *argv[]) {
     MPI_Comm_rank (cartesian, &cart_rank); 
     MPI_Comm_size (cartesian, &cart_size);
     mpi_err(mpi_op_status, "MPI_Cart_create");
-    //debug("%d cartesian comm created\n",rank);
+    debug("%d cartesian comm created\n",rank);
 
     mpi_op_status = MPI_Cart_sub(cartesian, keep_col, &col_comm);
     mpi_err(mpi_op_status, "MPI_Cart_sub2");
     MPI_Comm_rank (col_comm, &col_rank); 
     MPI_Comm_size (col_comm, &col_size);
-    //debug("%d col comm created\n", rank);
+    debug("%d col comm created\n", rank);
 
     mpi_op_status = MPI_Cart_sub(cartesian, keep_row, &row_comm);
     mpi_err(mpi_op_status, "MPI_Cart_sub2");
     MPI_Comm_rank (row_comm, &row_rank); 
     MPI_Comm_size (row_comm, &row_size);
 
-    //debug("%d: row comm created\n", rank);
+    debug("%d: row comm created\n", rank);
 
     int** graph = NULL;
     int* graph_elements = NULL;
@@ -81,25 +81,23 @@ int main (int argc, char *argv[]) {
     int grid_size[2];
     MPI_Cart_get(cartesian, 2, grid_size, periods, cords);
 
-    //debug("%d: %s, %d dimension\n", rank, input_file_name, dimension);
+    debug("%d: %s, %d dimension\n", rank, input_file_name, dimension);
 
     read_checkerboard_graph (input_file_name, (void***) &graph, (void**) &graph_elements, MPI_INT, &dimension, cartesian);
     
     int local_size_row = BLOCK_SIZE(cords[0], grid_size[0], dimension);
     int local_size_col = BLOCK_SIZE(cords[1], grid_size[1], dimension);
 
-    //debug("%d: %d,%d gridSize\n", rank, grid_size[0],grid_size[1]);
-    //debug("%d: %d,%d cords[]\n", rank, cords[0],cords[1]);
+    debug("%d: %d,%d gridSize\n", rank, grid_size[0],grid_size[1]);
+    debug("%d: %d,%d cords[]\n", rank, cords[0],cords[1]);
     debug("%d: %d,%d local block size row col\n", rank, local_size_row,local_size_col);
-
-    //print_graph(graph, local_size);
     
-    //debug("%d:  %d dimension\n", rank, dimension);
+    debug("%d:  %d dimension\n", rank, dimension);
 
     int* temp_vector_row = (int *) malloc(dimension * sizeof(int));
     int* temp_vector_col = (int *) malloc(dimension * sizeof(int));
 
-    //debug("%d: floyd start\n", rank);
+    debug("%d: floyd start\n", rank);
 
     float start_floyd = MPI_Wtime();
 
@@ -109,11 +107,15 @@ int main (int argc, char *argv[]) {
         owning_task[0] = BLOCK_OWNER(cords[0] , grid_size[0], dimension);
         owning_task[1] = BLOCK_OWNER(cords[1] , grid_size[1], dimension);
 
-        //debug("%d: Owner Cords %d,%d\n", rank, cords[1], cords[1]);
-        //debug("%d: iteration %d\n",rank,old_row);
+        debug("%d: Owner Cords %d,%d\n", rank, cords[1], cords[1]);
+        debug("%d: iteration %d\n",rank,old_row);
         
         if(owning_task[0] == cords[0 && owning_task[1] == cords[1]])
         {
+            // not sure whats going on here it seems to be escaping the temp vector arrays due
+            // to these offsets but im not sure why, the old_row subtractrion offset was much worse
+            // than no offset at all so maybe it was just to much of an offset either way im not sure
+            // what the offset should be currently. thank you for your assistance and advice Dr. Ligon
             int offset_row = /*old_row - */BLOCK_LOW(cords[0] , grid_size[0], dimension);
             int offset_col = /*old_row - */BLOCK_LOW(cords[1] , grid_size[1], dimension);
 
@@ -128,18 +130,18 @@ int main (int argc, char *argv[]) {
             }
         }
 
-        //debug("%d: start Bcast\n", rank);
+        debug("%d: start Bcast\n", rank);
 
         MPI_Bcast(temp_vector_col, dimension, MPI_INT, owning_task[0], row_comm);
         MPI_Bcast(temp_vector_row, dimension, MPI_INT, owning_task[1], col_comm);
 
-        //debug("%d: finish Bcast\n", rank);
+        debug("%d: finish Bcast\n", rank);
 
         for(int row = 0; row < local_size_row; row++)
         {
             for(int col = 0; col < local_size_col; col++)
             {
-                debug("%d: iteration k:%d, i:%d, j:%d\n",rank,old_row,row,col);
+                debug("%d: iteration k:%d, i:%d, j:%d\n", rank, old_row, row, col);
                 debug("%d: graph %d\n", rank, graph[row][col]);
                 debug("%d: temp_row %d\n", rank, temp_vector_row[col]);
                 debug("%d: temp_col %d\n", rank, temp_vector_col[row]);
@@ -149,21 +151,28 @@ int main (int argc, char *argv[]) {
             }
         }
 
-        //debug("%d: floyd iteration finished\n", rank);
+        debug("%d: floyd iteration finished\n", rank);
     }
 
     float stop_floyd = MPI_Wtime();
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    ////debug("%d: write checkboard graph\n", rank);
+    debug("%d: write checkboard graph\n", rank);
 
     write_checkerboard_graph (output_file_name, (void***) &graph, (void**) &graph_elements, MPI_INT, dimension, cartesian);
 
     float stop_total = MPI_Wtime(); 
 
-    printf("%d: %f elapsed total floyd time\n", rank, stop_floyd - start_floyd);    
+    int floyd_time = stop_floyd - start_floyd;
+    int total_time = stop_total - start_total;
 
-    printf("%d: %f elapsed total program time\n", rank, stop_total - start_total);
+    int floyd_reduce = 0;
+    int total_reduce = 0;
+
+    MPI_Allreduce(&floyd_time, &floyd_reduce, 1, MPI_INT, MPI_MIN, cartesian);
+    MPI_Allreduce(&total_time, &total_reduce, 1, MPI_INT, MPI_MIN, cartesian);
+
+    printf("%d: %f elapsed total floyd time\n", rank, floyd_reduce);    
+    printf("%d: %f elapsed total program time\n", rank, total_reduce);
 
     MPI_Finalize();
 
