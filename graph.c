@@ -10,15 +10,15 @@
 
 int min(int a,int b)
 {
-    if(a == NO_EDGE && b == NO_EDGE)
+    if(a <= NO_EDGE && b <= NO_EDGE)
     {
         return INFINITY;
     }
-    else if(a == NO_EDGE && !(b == NO_EDGE))
+    else if(a <= NO_EDGE && !(b <= NO_EDGE))
     {
         return b;
     }
-    else if(!(a == NO_EDGE) && b == NO_EDGE)
+    else if(!(a <= NO_EDGE) && b <= NO_EDGE)
     {
         return a;
     }
