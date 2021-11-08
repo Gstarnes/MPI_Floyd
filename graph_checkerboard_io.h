@@ -50,7 +50,7 @@ void write_checkerboard_graph (
 
 void error_out(int ret, int ID, MPI_Status *status);
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define debug(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
 #else

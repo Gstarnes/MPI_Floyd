@@ -162,11 +162,11 @@ int main (int argc, char *argv[]) {
 
     float stop_total = MPI_Wtime(); 
 
-    int floyd_time = stop_floyd - start_floyd;
-    int total_time = stop_total - start_total;
+    float floyd_time = stop_floyd - start_floyd;
+    float total_time = stop_total - start_total;
 
-    int floyd_reduce = 0;
-    int total_reduce = 0;
+    float floyd_reduce = 0;
+    float total_reduce = 0;
 
     MPI_Allreduce(&floyd_time, &floyd_reduce, 1, MPI_INT, MPI_MIN, cartesian);
     MPI_Allreduce(&total_time, &total_reduce, 1, MPI_INT, MPI_MIN, cartesian);
