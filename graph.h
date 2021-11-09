@@ -1,9 +1,6 @@
 //
 //  graph.h
-//  Prog02
-//
-//  Created by GS on 11/1/21.
-//
+//  Created by Gavin Starnes on 11/1/21.
 
 #ifndef graph_h
 #define graph_h

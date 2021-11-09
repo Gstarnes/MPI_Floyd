@@ -1,3 +1,7 @@
+//
+//  graph.h
+//  Created by Gavin Starnes on 11/1/21.
+
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,10 +41,10 @@ int main (int argc, char *argv[]) {
     {
          switch(opt)
          {
-            case 'i':input_file_name = strdup(optarg);
+            case "i":input_file_name = strdup(optarg);
             break;
 
-            case 'o':output_file_name = strdup(optarg);
+            case "o":output_file_name = strdup(optarg);
             break;
 
             default: printf("incorrect or unknown argument exiting");

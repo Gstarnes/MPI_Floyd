@@ -1,3 +1,7 @@
+//
+//  graph.h
+//  Created by Gavin Starnes on 11/1/21.
+
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>

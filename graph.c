@@ -1,9 +1,6 @@
 //
-//  graph.c
-//  Prog02
-//
-//  Created by GS on 11/1/21.
-//
+//  graph.h
+//  Created by Gavin Starnes on 11/1/21.
 
 #include "graph.h"
 
